@@ -47,374 +47,369 @@ import com.pineapplepayments.paya.connector.web.service.validation.TransactionRe
 @Transactional(readOnly = true)
 public class TransactionInformationService {
 
-    private static final Logger logger = LoggerFactory.getLogger(TransactionInformationService.class);
-    
-    @Autowired
-    private TransactionInformationRepository transactionInformationRepository;
+	private static final Logger logger = LoggerFactory.getLogger(TransactionInformationService.class);
 
-    @Autowired
-    private TransactionRequestValidationService transactionRequestValidationService;
+	@Autowired
+	private TransactionInformationRepository transactionInformationRepository;
 
-    @Autowired
-    private SoapClient soapClient;
+	@Autowired
+	private TransactionRequestValidationService transactionRequestValidationService;
 
-    @Autowired
-    private AuthGatewayHeaderService authGatewayHeaderService;
+	@Autowired
+	private SoapClient soapClient;
 
-    @Autowired
-    private AuthGatewayService authGatewayService;
+	@Autowired
+	private AuthGatewayHeaderService authGatewayHeaderService;
 
-    @Autowired
-    private TransactionResponseService transactionResponseService;
+	@Autowired
+	private AuthGatewayService authGatewayService;
 
-    @Autowired
-    private TerminalSettingsService terminalSettingsService;
+	@Autowired
+	private TransactionResponseService transactionResponseService;
 
-    @Autowired
-    private TransactionLogRepository transactionLogRepository;
+	@Autowired
+	private TerminalSettingsService terminalSettingsService;
 
-    /**
-     * 
-     * @param transactionInformation
-     * @param bindingResult
-     * @return
-     */
-    @Transactional
-    public TransactionResponse validateACHTransaction(TransactionInformation transactionInformation,
-            BindingResult bindingResult) {
+	@Autowired
+	private TransactionLogRepository transactionLogRepository;
 
-        transactionInformation.setRequestId(UUID.randomUUID().toString());
-        transactionInformation.setTransactionGuid(UUID.randomUUID().toString());
+	/**
+	 * 
+	 * @param transactionInformation
+	 * @param bindingResult
+	 * @return
+	 */
+	@Transactional
+	public TransactionResponse validateACHTransaction(TransactionInformation transactionInformation,
+			BindingResult bindingResult) {
 
-        if (transactionRequestValidationService.validateRequest(transactionInformation, bindingResult)) {
+		transactionInformation.setRequestId(UUID.randomUUID().toString());
+		transactionInformation.setTransactionGuid(UUID.randomUUID().toString());
 
-            TerminalSettings terminalSettings = terminalSettingsService
-                    .getActiveTerminalDetailsByTerminalId(transactionInformation.getTerminalId());
+		if (transactionRequestValidationService.validateRequest(transactionInformation, bindingResult)) {
 
-            String dataPacket = prepareDataPacket(transactionInformation, terminalSettings);
+			TerminalSettings terminalSettings = terminalSettingsService
+					.getActiveTerminalDetailsByTerminalId(transactionInformation.getTerminalId());
 
-            save(transactionInformation);
+			String dataPacket = prepareDataPacket(transactionInformation, terminalSettings);
 
-            AuthGatewayCertificationResponse authGatewayCertificationResponse = null;
-            authGatewayCertificationResponse = authGatewayService.getAuthGateway(dataPacket, terminalSettings.getTerminalId());
+			save(transactionInformation);
 
-            if (authGatewayCertificationResponse.getAuthGatewayCertificationResult().contains("EXCEPTION")
-                    || authGatewayCertificationResponse.getAuthGatewayCertificationResult().contains("Failed")) {
-                return transactionResponseService.save(
-                        populateTransactionResponseForAuthException(authGatewayCertificationResponse, transactionInformation,
-                                terminalSettings));
-            } else {
-                return transactionResponseService
-                        .save(populateTransactionResponseForAuthSuccess(authGatewayCertificationResponse, transactionInformation,
-                                terminalSettings));
-            }
+			AuthGatewayCertificationResponse authGatewayCertificationResponse = null;
+			authGatewayCertificationResponse = authGatewayService.getAuthGateway(dataPacket,
+					terminalSettings.getTerminalId());
 
-        } else {
-            return null;
-        }
-    }
+			if (authGatewayCertificationResponse.getAuthGatewayCertificationResult().contains("EXCEPTION")
+					|| authGatewayCertificationResponse.getAuthGatewayCertificationResult().contains("Failed")) {
+				return transactionResponseService.save(populateTransactionResponseForAuthException(
+						authGatewayCertificationResponse, transactionInformation, terminalSettings));
+			} else {
+				return transactionResponseService.save(populateTransactionResponseForAuthSuccess(
+						authGatewayCertificationResponse, transactionInformation, terminalSettings));
+			}
 
-    /**
-     * Validating the request & preparing the XML to call Paya service i.e processingSingleCertiCheck & returning the response
-     * @param transactionInformation
-     * @param bindingResult
-     * @return
-     */
-    @Transactional
-    public TransactionResponse processACHTransaction(TransactionInformation transactionInformation,
-            BindingResult bindingResult) {
-        TransactionResponse authResponse = validateACHTransaction(transactionInformation, bindingResult);
+		} else {
+			return null;
+		}
+	}
 
-        if (authResponse == null
-                || (authResponse.getError() != null && !StringUtils.isEmpty(authResponse.getError().getMessage()))) {
-            return authResponse;
-        } else {
-            TerminalSettings terminalSettings = terminalSettingsService
-                    .getActiveTerminalDetailsByTerminalId(transactionInformation.getTerminalId());
+	/**
+	 * Validating the request & preparing the XML to call Paya service i.e processingSingleCertiCheck & returning the response
+	 * @param transactionInformation
+	 * @param bindingResult
+	 * @return
+	 */
+	@Transactional
+	public TransactionResponse processACHTransaction(TransactionInformation transactionInformation,
+			BindingResult bindingResult) {
+		TransactionResponse authResponse = validateACHTransaction(transactionInformation, bindingResult);
 
-            String dataPacket = prepareDataPacket(transactionInformation, terminalSettings);
+		if (authResponse == null
+				|| (authResponse.getError() != null && !StringUtils.isEmpty(authResponse.getError().getMessage()))) {
+			return authResponse;
+		} else {
+			TerminalSettings terminalSettings = terminalSettingsService
+					.getActiveTerminalDetailsByTerminalId(transactionInformation.getTerminalId());
+			String dataPacket = prepareDataPacket(transactionInformation, terminalSettings);
+			// Calcutaling the tx request time & response time
+			StopWatch watch = new StopWatch();
+			watch.start();
+			return processingSingleCertiCheck(transactionInformation, terminalSettings, dataPacket, watch);
+		}
+	}
 
-            // Calcutaling the tx request time & response time
-            StopWatch watch = new StopWatch();
-            watch.start();
-            return processingSingleCertiCheck(transactionInformation, terminalSettings, dataPacket, watch);
-        }
-    }
+	/**
+	 * Calling the Paya service processSingleCertificationCheck and returning the response
+	 * @param transactionInformation
+	 * @param terminalSettings
+	 * @param dataPacket
+	 * @param watch
+	 * @return
+	 */
+	private TransactionResponse processingSingleCertiCheck(TransactionInformation transactionInformation,
+			TerminalSettings terminalSettings, String dataPacket, StopWatch watch) {
+		ProcessSingleCertificationCheckResponse singleCertificationCheckResponse;
+		singleCertificationCheckResponse = soapClient.processSingleCertificationCheck(dataPacket,
+				authGatewayHeaderService.prepareAuthHeader(terminalSettings.getTerminalId()));
+		logger.debug("Response from paya service for processSingleCertificationCheck(): "
+				+ singleCertificationCheckResponse.getProcessSingleCertificationCheckResult());
+		watch.stop();
+		if (!(singleCertificationCheckResponse.getProcessSingleCertificationCheckResult().contains("EXCEPTION")
+				|| singleCertificationCheckResponse.getProcessSingleCertificationCheckResult().contains("Failed"))) {
+			return transactionResponseService.save(populateTransactionResponse(singleCertificationCheckResponse,
+					transactionInformation, terminalSettings));
+		} else {
+			return populateProcessSinCertChkTransResForException(singleCertificationCheckResponse,
+					transactionInformation, terminalSettings);
+		}
+	}
 
-    /**
-     * Calling the Paya service processSingleCertificationCheck and returning the response 
-     * @param transactionInformation
-     * @param terminalSettings
-     * @param dataPacket
-     * @param watch
-     * @return
-     */
-    private TransactionResponse processingSingleCertiCheck(TransactionInformation transactionInformation,
-            TerminalSettings terminalSettings, String dataPacket, StopWatch watch) {
-        ProcessSingleCertificationCheckResponse singleCertificationCheckResponse;
-        singleCertificationCheckResponse = soapClient.processSingleCertificationCheck(dataPacket,
-                authGatewayHeaderService.prepareAuthHeader(terminalSettings.getTerminalId()));
-        logger.debug("Response from paya service for processSingleCertificationCheck(): " + singleCertificationCheckResponse.getProcessSingleCertificationCheckResult());
-        watch.stop();
-        System.out.println(watch.getTime());
-        if (!(singleCertificationCheckResponse.getProcessSingleCertificationCheckResult().contains("EXCEPTION")
-                || singleCertificationCheckResponse.getProcessSingleCertificationCheckResult().contains("Failed"))) {
-            return transactionResponseService.save(populateTransactionResponse(singleCertificationCheckResponse,
-                    transactionInformation, terminalSettings));
-        } else {
-            return populateProcessSinCertChkTransResForException(singleCertificationCheckResponse, transactionInformation,
-                    terminalSettings);
-        }
-    }
+	/**
+	 * Preparing the data packet i.e XML body
+	 * @param transactionInformation
+	 * @param terminalSettings
+	 * @return
+	 */
+	private String prepareDataPacket(TransactionInformation transactionInformation, TerminalSettings terminalSettings) {
+		String dataPacket = "";
+		AUTH_GATEWAY ag = new AUTH_GATEWAY();
+		ag.setREQUEST_ID(transactionInformation.getRequestId());
+		ag.setTRANSACTION(new TRANSACTION());
+		ag.getTRANSACTION().setMERCHANT(new MERCHANT());
+		ag.getTRANSACTION().getMERCHANT().setTERMINAL_ID(transactionInformation.getTerminalId().toString());
+		ag.getTRANSACTION().setPACKET(new PACKET());
+		ag.getTRANSACTION().getPACKET().setIDENTIFIER(transactionInformation.getIdentifier());
+		ag.getTRANSACTION().getPACKET().setACCOUNT(new ACCOUNT());
+		ag.getTRANSACTION().getPACKET().getACCOUNT()
+				.setACCOUNT_NUMBER(transactionInformation.getAccountNumber().toString());
+		ag.getTRANSACTION().getPACKET().getACCOUNT().setACCOUNT_TYPE(transactionInformation.getAccountType());
+		if (terminalSettings != null && ACHContants.SEC_CODE_TEL.equals(terminalSettings.getSecCode().trim()))
+			ag.getTRANSACTION().getPACKET().getACCOUNT()
+					.setCHECK_NUMBER(transactionInformation.getCheckNumber().toString());
+		ag.getTRANSACTION().getPACKET().getACCOUNT()
+				.setROUTING_NUMBER(transactionInformation.getRountingNumber().toString());
+		ag.getTRANSACTION().getPACKET().setCHECK(new CHECK());
+		ag.getTRANSACTION().getPACKET().getCHECK().setCHECK_AMOUNT(transactionInformation.getCheckAmount().toString());
+		ag.getTRANSACTION().getPACKET().setCONSUMER(new CONSUMER());
+		if (terminalSettings != null && ACHContants.SEC_CODE_CCD.equals(terminalSettings.getSecCode().trim()))
+			ag.getTRANSACTION().getPACKET().getCONSUMER()
+					.setCOMPANY_NAME(transactionInformation.getCompanyName().trim());
+		ag.getTRANSACTION().getPACKET().getCONSUMER().setFIRST_NAME(transactionInformation.getFirstName());
+		ag.getTRANSACTION().getPACKET().getCONSUMER().setLAST_NAME(transactionInformation.getLastName());
+		ag.getTRANSACTION().getPACKET().getCONSUMER().setADDRESS1(transactionInformation.getAddress1());
+		ag.getTRANSACTION().getPACKET().getCONSUMER().setADDRESS2(transactionInformation.getAddress2());
+		ag.getTRANSACTION().getPACKET().getCONSUMER().setCITY(transactionInformation.getCity());
+		ag.getTRANSACTION().getPACKET().getCONSUMER().setCOURTESY_CARD_ID(transactionInformation.getCourtseyCardId());
+		ag.getTRANSACTION().getPACKET().getCONSUMER().setDL_NUMBER(transactionInformation.getDlNumber());
+		ag.getTRANSACTION().getPACKET().getCONSUMER().setDL_STATE(transactionInformation.getDlState());
+		ag.getTRANSACTION().getPACKET().getCONSUMER().setPHONE_NUMBER(transactionInformation.getPhoneNumber());
+		ag.getTRANSACTION().getPACKET().getCONSUMER().setSTATE(transactionInformation.getState());
+		ag.getTRANSACTION().getPACKET().getCONSUMER().setZIP(transactionInformation.getZipCode().toString());
+		try {
+			JAXBContext context = JAXBContext.newInstance(AUTH_GATEWAY.class);
+			Marshaller m = context.createMarshaller();
 
-    /**
-     * Preparing the data packet i.e XML body
-     * @param transactionInformation
-     * @param terminalSettings
-     * @return
-     */
-    private String prepareDataPacket(TransactionInformation transactionInformation, TerminalSettings terminalSettings) {
-        String dataPacket = "";
-        AUTH_GATEWAY ag = new AUTH_GATEWAY();
-        ag.setREQUEST_ID(transactionInformation.getRequestId());
-        ag.setTRANSACTION(new TRANSACTION());
-        ag.getTRANSACTION().setMERCHANT(new MERCHANT());
-        ag.getTRANSACTION().getMERCHANT().setTERMINAL_ID(transactionInformation.getTerminalId().toString());
-        ag.getTRANSACTION().setPACKET(new PACKET());
-        ag.getTRANSACTION().getPACKET().setIDENTIFIER(transactionInformation.getIdentifier());
-        ag.getTRANSACTION().getPACKET().setACCOUNT(new ACCOUNT());
-        ag.getTRANSACTION().getPACKET().getACCOUNT()
-                .setACCOUNT_NUMBER(transactionInformation.getAccountNumber().toString());
-        ag.getTRANSACTION().getPACKET().getACCOUNT().setACCOUNT_TYPE(transactionInformation.getAccountType());
-        if (terminalSettings != null && ACHContants.SEC_CODE_TEL.equals(terminalSettings.getSecCode().trim()))
-            ag.getTRANSACTION().getPACKET().getACCOUNT()
-                    .setCHECK_NUMBER(transactionInformation.getCheckNumber().toString());
-        ag.getTRANSACTION().getPACKET().getACCOUNT()
-                .setROUTING_NUMBER(transactionInformation.getRountingNumber().toString());
-        ag.getTRANSACTION().getPACKET().setCHECK(new CHECK());
-        ag.getTRANSACTION().getPACKET().getCHECK().setCHECK_AMOUNT(transactionInformation.getCheckAmount().toString());
-        ag.getTRANSACTION().getPACKET().setCONSUMER(new CONSUMER());
-        if (terminalSettings != null && ACHContants.SEC_CODE_CCD.equals(terminalSettings.getSecCode().trim()))
-            ag.getTRANSACTION().getPACKET().getCONSUMER()
-                    .setCOMPANY_NAME(transactionInformation.getCompanyName().trim());
-        ag.getTRANSACTION().getPACKET().getCONSUMER().setFIRST_NAME(transactionInformation.getFirstName());
-        ag.getTRANSACTION().getPACKET().getCONSUMER().setLAST_NAME(transactionInformation.getLastName());
-        ag.getTRANSACTION().getPACKET().getCONSUMER().setADDRESS1(transactionInformation.getAddress1());
-        ag.getTRANSACTION().getPACKET().getCONSUMER().setADDRESS2(transactionInformation.getAddress2());
-        ag.getTRANSACTION().getPACKET().getCONSUMER().setCITY(transactionInformation.getCity());
-        ag.getTRANSACTION().getPACKET().getCONSUMER().setCOURTESY_CARD_ID(transactionInformation.getCourtseyCardId());
-        ag.getTRANSACTION().getPACKET().getCONSUMER().setDL_NUMBER(transactionInformation.getDlNumber());
-        ag.getTRANSACTION().getPACKET().getCONSUMER().setDL_STATE(transactionInformation.getDlState());
-        ag.getTRANSACTION().getPACKET().getCONSUMER().setPHONE_NUMBER(transactionInformation.getPhoneNumber());
-        ag.getTRANSACTION().getPACKET().getCONSUMER().setSTATE(transactionInformation.getState());
-        ag.getTRANSACTION().getPACKET().getCONSUMER().setZIP(transactionInformation.getZipCode().toString());
-        try {
-            JAXBContext context = JAXBContext.newInstance(AUTH_GATEWAY.class);
-            Marshaller m = context.createMarshaller();
+			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE); // To format XML
 
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE); // To format XML
+			StringWriter sw = new StringWriter();
+			m.marshal(ag, sw);
+			dataPacket = sw.toString();
 
-            StringWriter sw = new StringWriter();
-            m.marshal(ag, sw);
-            dataPacket = sw.toString();
+		} catch (JAXBException e) {
+			e.printStackTrace();
+		}
 
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
+		return dataPacket;
+	}
 
-        return dataPacket;
-    }
+	/**
+	 * Converting the string processSingleCertificationCheckResult to transaction response object
+	 * @param singleCertificationCheckResponse
+	 * @param transactionInformation
+	 * @param terminalSettings
+	 * @return
+	 */
+	private TransactionResponse populateTransactionResponse(
+			ProcessSingleCertificationCheckResponse singleCertificationCheckResponse,
+			TransactionInformation transactionInformation, TerminalSettings terminalSettings) {
+		TransactionResponse transactionResponse = new TransactionResponse();
+		JAXBContext jaxbContext;
+		RESPONSE processSingleResponse = null;
+		try {
+			if (!singleCertificationCheckResponse.getProcessSingleCertificationCheckResult().contains("EXCEPTION")) {
+				jaxbContext = JAXBContext.newInstance(RESPONSE.class);
+				Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+				processSingleResponse = (RESPONSE) jaxbUnmarshaller.unmarshal(
+						new StringReader(singleCertificationCheckResponse.getProcessSingleCertificationCheckResult()));
+				transactionResponse = new TransactionResponse(processSingleResponse);
+				transactionResponse.setTransactionGuid(transactionInformation.getTransactionGuid());
+				transactionResponse.setTransactionType(transactionInformation.getTransactionType());
+				transactionResponse.setTransactionInfoId(transactionInformation);
+				transactionResponse.setSecCode(terminalSettings.getSecCode());
+				transactionResponse.setStatus(true);
+			} else {
+				jaxbContext = JAXBContext.newInstance(RESPONSE.class);
+				Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+				processSingleResponse = (RESPONSE) jaxbUnmarshaller.unmarshal(
+						new StringReader(singleCertificationCheckResponse.getProcessSingleCertificationCheckResult()));
+				transactionResponse
+						.setError(new Error(HttpStatus.BAD_REQUEST, processSingleResponse.getEXCEPTION().getMESSAGE()));
+			}
 
-    /**
-     * Converting the string processSingleCertificationCheckResult to transaction response object
-     * @param singleCertificationCheckResponse
-     * @param transactionInformation
-     * @param terminalSettings
-     * @return
-     */
-    private TransactionResponse populateTransactionResponse(
-            ProcessSingleCertificationCheckResponse singleCertificationCheckResponse,
-            TransactionInformation transactionInformation, TerminalSettings terminalSettings) {
-        TransactionResponse transactionResponse = new TransactionResponse();
-        JAXBContext jaxbContext;
-        RESPONSE processSingleResponse = null;
-        try {
-            if (!singleCertificationCheckResponse.getProcessSingleCertificationCheckResult().contains("EXCEPTION")) {
-                jaxbContext = JAXBContext.newInstance(RESPONSE.class);
-                Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-                processSingleResponse = (RESPONSE) jaxbUnmarshaller.unmarshal(
-                        new StringReader(singleCertificationCheckResponse.getProcessSingleCertificationCheckResult()));
-                transactionResponse = new TransactionResponse(processSingleResponse);
-                transactionResponse.setTransactionGuid(transactionInformation.getTransactionGuid());
-                transactionResponse.setTransactionType(transactionInformation.getTransactionType());
-                transactionResponse.setTransactionInfoId(transactionInformation);
-                transactionResponse.setSecCode(terminalSettings.getSecCode());
-                transactionResponse.setStatus(true);
-            } else {
-                jaxbContext = JAXBContext.newInstance(RESPONSE.class);
-                Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-                processSingleResponse = (RESPONSE) jaxbUnmarshaller.unmarshal(
-                        new StringReader(singleCertificationCheckResponse.getProcessSingleCertificationCheckResult()));
-                transactionResponse
-                        .setError(new Error(HttpStatus.BAD_REQUEST, processSingleResponse.getEXCEPTION().getMESSAGE()));
-            }
+		} catch (JAXBException e) {
+			e.printStackTrace();
+		}
 
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
+		return transactionResponse;
+	}
 
-        return transactionResponse;
-    }
-    
-    /**
-     * Checking the Exception & failure cases from Paya service and returning the transaction response object
-     * @param singleCertificationCheckResponse
-     * @param transactionInformation
-     * @param terminalSettings
-     * @return
-     */
-    private TransactionResponse populateProcessSinCertChkTransResForException(
-            ProcessSingleCertificationCheckResponse singleCertificationCheckResponse,
-            TransactionInformation transactionInformation, TerminalSettings terminalSettings) {
-        TransactionResponse transactionResponse = new TransactionResponse();
-        JAXBContext jaxbContext;
-        RESPONSE processSingleResponse = null;
-        try {
-            jaxbContext = JAXBContext.newInstance(RESPONSE.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            processSingleResponse = (RESPONSE) jaxbUnmarshaller.unmarshal(
-                    new StringReader(singleCertificationCheckResponse.getProcessSingleCertificationCheckResult()));
-            transactionResponse.setRequestId(transactionInformation.getRequestId());
-            transactionResponse.setTransactionGuid(transactionInformation.getTransactionGuid());
-            transactionResponse.setTransactionType(transactionInformation.getTransactionType());
-            transactionResponse.setTransactionInfoId(transactionInformation);
-            transactionResponse.setSecCode(terminalSettings.getSecCode());
-            transactionResponse.setStatus(false);
-            if (singleCertificationCheckResponse.getProcessSingleCertificationCheckResult().contains("EXCEPTION")) {
-                transactionResponse
-                        .setError(new Error(HttpStatus.BAD_REQUEST, processSingleResponse.getEXCEPTION().getMESSAGE()));
-            } else if (singleCertificationCheckResponse.getProcessSingleCertificationCheckResult().contains("Failed")) {
-                transactionResponse.setError(new Error(HttpStatus.BAD_REQUEST,
-                        processSingleResponse.getVALIDATION_MESSAGE().getVALIDATION_ERROR().get(0).getMESSAGE()));
-            }
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
+	/**
+	 * Checking the Exception & failure cases from Paya service and returning the transaction response object
+	 * @param singleCertificationCheckResponse
+	 * @param transactionInformation
+	 * @param terminalSettings
+	 * @return
+	 */
+	private TransactionResponse populateProcessSinCertChkTransResForException(
+			ProcessSingleCertificationCheckResponse singleCertificationCheckResponse,
+			TransactionInformation transactionInformation, TerminalSettings terminalSettings) {
+		TransactionResponse transactionResponse = new TransactionResponse();
+		JAXBContext jaxbContext;
+		RESPONSE processSingleResponse = null;
+		try {
+			jaxbContext = JAXBContext.newInstance(RESPONSE.class);
+			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			processSingleResponse = (RESPONSE) jaxbUnmarshaller.unmarshal(
+					new StringReader(singleCertificationCheckResponse.getProcessSingleCertificationCheckResult()));
+			transactionResponse.setRequestId(transactionInformation.getRequestId());
+			transactionResponse.setTransactionGuid(transactionInformation.getTransactionGuid());
+			transactionResponse.setTransactionType(transactionInformation.getTransactionType());
+			transactionResponse.setTransactionInfoId(transactionInformation);
+			transactionResponse.setSecCode(terminalSettings.getSecCode());
+			transactionResponse.setStatus(false);
+			if (singleCertificationCheckResponse.getProcessSingleCertificationCheckResult().contains("EXCEPTION")) {
+				transactionResponse
+						.setError(new Error(HttpStatus.BAD_REQUEST, processSingleResponse.getEXCEPTION().getMESSAGE()));
+			} else if (singleCertificationCheckResponse.getProcessSingleCertificationCheckResult().contains("Failed")) {
+				transactionResponse.setError(new Error(HttpStatus.BAD_REQUEST,
+						processSingleResponse.getVALIDATION_MESSAGE().getVALIDATION_ERROR().get(0).getMESSAGE()));
+			}
+		} catch (JAXBException e) {
+			e.printStackTrace();
+		}
 
-        return transactionResponse;
-    }
-    
-    /**
-     * 
-     * @param authGatewayCertificationResponse
-     * @param transactionInformation
-     * @param terminalSettings
-     * @return
-     */
-    private TransactionResponse populateTransactionResponseForAuthException(
-            AuthGatewayCertificationResponse authGatewayCertificationResponse, TransactionInformation transactionInformation,
-            TerminalSettings terminalSettings) {
-        TransactionResponse transactionResponse = new TransactionResponse();
-        JAXBContext jaxbContext;
-        RESPONSE response = null;
-        try {
-            jaxbContext = JAXBContext.newInstance(RESPONSE.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            response = (RESPONSE) jaxbUnmarshaller.unmarshal(
-                    new StringReader(authGatewayCertificationResponse.getAuthGatewayCertificationResult()));
-            transactionResponse.setRequestId(transactionInformation.getRequestId());
-            transactionResponse.setTransactionGuid(transactionInformation.getTransactionGuid());
-            transactionResponse.setTransactionType(transactionInformation.getTransactionType());
-            transactionResponse.setTransactionInfoId(transactionInformation);
-            transactionResponse.setSecCode(terminalSettings.getSecCode());
-            transactionResponse.setStatus(false);
-            if (authGatewayCertificationResponse.getAuthGatewayCertificationResult().contains("EXCEPTION")) {
-                transactionResponse
-                        .setError(new Error(HttpStatus.BAD_REQUEST, response.getEXCEPTION().getMESSAGE()));
-            } else if (authGatewayCertificationResponse.getAuthGatewayCertificationResult().contains("Failed")) {
-                transactionResponse.setError(new Error(HttpStatus.BAD_REQUEST,
-                        response.getVALIDATION_MESSAGE().getVALIDATION_ERROR().get(0).getMESSAGE()));
-            }
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
+		return transactionResponse;
+	}
 
-        return transactionResponse;
-    }
+	/**
+	 * 
+	 * @param authGatewayCertificationResponse
+	 * @param transactionInformation
+	 * @param terminalSettings
+	 * @return
+	 */
+	private TransactionResponse populateTransactionResponseForAuthException(
+			AuthGatewayCertificationResponse authGatewayCertificationResponse,
+			TransactionInformation transactionInformation, TerminalSettings terminalSettings) {
+		TransactionResponse transactionResponse = new TransactionResponse();
+		JAXBContext jaxbContext;
+		RESPONSE response = null;
+		try {
+			jaxbContext = JAXBContext.newInstance(RESPONSE.class);
+			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			response = (RESPONSE) jaxbUnmarshaller
+					.unmarshal(new StringReader(authGatewayCertificationResponse.getAuthGatewayCertificationResult()));
+			transactionResponse.setRequestId(transactionInformation.getRequestId());
+			transactionResponse.setTransactionGuid(transactionInformation.getTransactionGuid());
+			transactionResponse.setTransactionType(transactionInformation.getTransactionType());
+			transactionResponse.setTransactionInfoId(transactionInformation);
+			transactionResponse.setSecCode(terminalSettings.getSecCode());
+			transactionResponse.setStatus(false);
+			if (authGatewayCertificationResponse.getAuthGatewayCertificationResult().contains("EXCEPTION")) {
+				transactionResponse.setError(new Error(HttpStatus.BAD_REQUEST, response.getEXCEPTION().getMESSAGE()));
+			} else if (authGatewayCertificationResponse.getAuthGatewayCertificationResult().contains("Failed")) {
+				transactionResponse.setError(new Error(HttpStatus.BAD_REQUEST,
+						response.getVALIDATION_MESSAGE().getVALIDATION_ERROR().get(0).getMESSAGE()));
+			}
+		} catch (JAXBException e) {
+			e.printStackTrace();
+		}
+		return transactionResponse;
+	}
 
-     /**
-      * 
-      * @param authGatewayCertificationResponse
-      * @param transactionInformation
-      * @param terminalSettings
-      * @return
-      */
-    private TransactionResponse populateTransactionResponseForAuthSuccess(
-            AuthGatewayCertificationResponse authGatewayCertificationResponse, TransactionInformation transactionInformation,
-            TerminalSettings terminalSettings) {
-        TransactionResponse transactionResponse = new TransactionResponse();
-        JAXBContext jaxbContext;
-        RESPONSE response = null;
-        try {
-            jaxbContext = JAXBContext.newInstance(RESPONSE.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            response = (RESPONSE) jaxbUnmarshaller.unmarshal(
-                    new StringReader(authGatewayCertificationResponse.getAuthGatewayCertificationResult()));
-            transactionResponse.setRequestId(transactionInformation.getRequestId());
-            transactionResponse.setTransactionGuid(transactionInformation.getTransactionGuid());
-            transactionResponse.setTransactionType(transactionInformation.getTransactionType());
-            transactionResponse.setTransactionInfoId(transactionInformation);
-            transactionResponse.setSecCode(terminalSettings.getSecCode());
-            transactionResponse.setStatus(true);
-            transactionResponse.setMessage(response.getVALIDATION_MESSAGE().getRESULT());
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
+	/**
+	 * 
+	 * @param authGatewayCertificationResponse
+	 * @param transactionInformation
+	 * @param terminalSettings
+	 * @return
+	 */
+	private TransactionResponse populateTransactionResponseForAuthSuccess(
+			AuthGatewayCertificationResponse authGatewayCertificationResponse,
+			TransactionInformation transactionInformation, TerminalSettings terminalSettings) {
+		TransactionResponse transactionResponse = new TransactionResponse();
+		JAXBContext jaxbContext;
+		RESPONSE response = null;
+		try {
+			jaxbContext = JAXBContext.newInstance(RESPONSE.class);
+			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			response = (RESPONSE) jaxbUnmarshaller
+					.unmarshal(new StringReader(authGatewayCertificationResponse.getAuthGatewayCertificationResult()));
+			transactionResponse.setRequestId(transactionInformation.getRequestId());
+			transactionResponse.setTransactionGuid(transactionInformation.getTransactionGuid());
+			transactionResponse.setTransactionType(transactionInformation.getTransactionType());
+			transactionResponse.setTransactionInfoId(transactionInformation);
+			transactionResponse.setSecCode(terminalSettings.getSecCode());
+			transactionResponse.setStatus(true);
+			transactionResponse.setMessage(response.getVALIDATION_MESSAGE().getRESULT());
+		} catch (JAXBException e) {
+			e.printStackTrace();
+		}
 
-        return transactionResponse;
-    }
-    
-    /**
-     * Persisting the data in to TransactionInformation & Transaction Log tables
-     * @param transactionInformation
-     * @return
-     */
-    @Transactional
-    public TransactionInformation save(TransactionInformation transactionInformation) {
-        populateAuditFields(transactionInformation);
-        transactionLogRepository.save(new TransactionLog(transactionInformation));
-        return transactionInformationRepository.save(transactionInformation);
+		return transactionResponse;
+	}
 
-    }
-    
-    /**
-     * 
-     * @param transactionInformationList
-     * @return
-     */
-    @Transactional
-    public List<TransactionInformation> save(List<TransactionInformation> transactionInformationList) {
-        for (TransactionInformation ti : transactionInformationList) {
-            populateAuditFields(ti);
-        }
-        return transactionInformationRepository.saveAll(transactionInformationList);
+	/**
+	 * Persisting the data in to TransactionInformation & Transaction Log tables
+	 * 
+	 * @param transactionInformation
+	 * @return
+	 */
+	@Transactional
+	public TransactionInformation save(TransactionInformation transactionInformation) {
+		populateAuditFields(transactionInformation);
+		transactionLogRepository.save(new TransactionLog(transactionInformation));
+		return transactionInformationRepository.save(transactionInformation);
 
-    }
-    
-    /**
-     * Populating the audit fields 
-     * @param transactionInformation
-     */
-    private void populateAuditFields(TransactionInformation transactionInformation) {
-        String userName = System.getProperty("user.name");
-        if (transactionInformation.getId() == null) {
-            transactionInformation.setCreatedBy(userName);
-            transactionInformation.setCreatedOn(Timestamp.valueOf(LocalDateTime.now()));
-        }
+	}
 
-        transactionInformation.setModifiedBy(userName);
-        transactionInformation.setModifiedOn(Timestamp.valueOf(LocalDateTime.now()));
+	/**
+	 * Persisting the list of transaction information objects
+	 * @param transactionInformationList
+	 * @return
+	 */
+	@Transactional
+	public List<TransactionInformation> save(List<TransactionInformation> transactionInformationList) {
+		for (TransactionInformation ti : transactionInformationList) {
+			populateAuditFields(ti);
+		}
+		return transactionInformationRepository.saveAll(transactionInformationList);
 
-    }
+	}
+
+	/**
+	 * Populating the audit fields
+	 * @param transactionInformation
+	 */
+	private void populateAuditFields(TransactionInformation transactionInformation) {
+		String userName = System.getProperty("user.name");
+		if (transactionInformation.getId() == null) {
+			transactionInformation.setCreatedBy(userName);
+			transactionInformation.setCreatedOn(Timestamp.valueOf(LocalDateTime.now()));
+		}
+		transactionInformation.setModifiedBy(userName);
+		transactionInformation.setModifiedOn(Timestamp.valueOf(LocalDateTime.now()));
+
+	}
 
 }

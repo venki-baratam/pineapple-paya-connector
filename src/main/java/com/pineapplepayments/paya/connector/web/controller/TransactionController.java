@@ -48,7 +48,7 @@ public class TransactionController {
     public ResponseEntity<?> validateACHTransaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
 
-        transactionInformation.setTransactionType("validate");
+    	transactionInformation.setTransactionType(TransactionTypes.Validate);
         if (bindingResult.hasErrors()) {
             return errorHandler.getErrorResponseEntityForBindingErrors(bindingResult);
         }
@@ -78,7 +78,7 @@ public class TransactionController {
     public ResponseEntity<?> processACHTransaction(@Valid @RequestBody TransactionInformation transactionInformation,
             BindingResult bindingResult) {
 
-        transactionInformation.setTransactionType(TransactionTypes.Validate.toString());
+        transactionInformation.setTransactionType(TransactionTypes.Authorization);
         if (bindingResult.hasErrors()) {
             return errorHandler.getErrorResponseEntityForBindingErrors(bindingResult);
         }
@@ -106,7 +106,7 @@ public class TransactionController {
     @PostMapping(path = "credit")
     public ResponseEntity<?> processCreditsTranaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
-        transactionInformation.setTransactionType(TransactionTypes.Credit.getValue());
+        transactionInformation.setTransactionType(TransactionTypes.Credit);
         TransactionResponse response = new TransactionResponse();
         response.setTransactionGuid(UUID.randomUUID().toString());
         response.setTransactionType(transactionInformation.getTransactionType());
@@ -138,7 +138,7 @@ public class TransactionController {
     public ResponseEntity<?> voidACHTransaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
         TransactionResponse response = new TransactionResponse();
-        transactionInformation.setTransactionType(TransactionTypes.Void.getValue());
+        transactionInformation.setTransactionType(TransactionTypes.Void);
         response.setTransactionGuid(UUID.randomUUID().toString());
         response.setTransactionType(transactionInformation.getTransactionType());
         response.setRequestId(UUID.randomUUID().toString());
@@ -169,7 +169,7 @@ public class TransactionController {
     public ResponseEntity<?> reverseACHTransaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
         TransactionResponse response = new TransactionResponse();
-        transactionInformation.setTransactionType(TransactionTypes.Reverse.getValue());
+        transactionInformation.setTransactionType(TransactionTypes.Reverse);
         response.setTransactionGuid(UUID.randomUUID().toString());
         response.setTransactionType(transactionInformation.getTransactionType());
         response.setRequestId(UUID.randomUUID().toString());
@@ -200,7 +200,7 @@ public class TransactionController {
     public ResponseEntity<?> recurringACHTransaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
         TransactionResponse response = new TransactionResponse();
-        transactionInformation.setTransactionType("recurring");
+        transactionInformation.setTransactionType(TransactionTypes.Recurring);
         response.setTransactionGuid(UUID.randomUUID().toString());
         response.setTransactionType(transactionInformation.getTransactionType());
         response.setRequestId(UUID.randomUUID().toString());
@@ -231,7 +231,7 @@ public class TransactionController {
     public ResponseEntity<?> overrideACHTransaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
         TransactionResponse response = new TransactionResponse();
-        transactionInformation.setTransactionType("override");
+        transactionInformation.setTransactionType(TransactionTypes.Override);
         response.setTransactionGuid(UUID.randomUUID().toString());
         response.setTransactionType(transactionInformation.getTransactionType());
         response.setRequestId(UUID.randomUUID().toString());

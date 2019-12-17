@@ -4,6 +4,8 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -13,389 +15,400 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import com.pineapplepayments.paya.connector.contants.TransactionTypes;
+
 @SequenceGenerator(name = TransactionInformation.SEQ_TRANSACTION_INFORMATION, sequenceName = TransactionInformation.SEQ_TRANSACTION_INFORMATION, allocationSize = 1)
 @Entity(name = "transaction_information")
 public class TransactionInformation extends AbstractAuditable {
 
-    private static final long serialVersionUID = -3092936274229893893L;
-
-    public static final String SEQ_TRANSACTION_INFORMATION = "SEQ_TRANSACTION_INFORMATION";
-
-    @Id
-    @GeneratedValue(generator = SEQ_TRANSACTION_INFORMATION, strategy = GenerationType.SEQUENCE)
-    private Long id;
-
-    @Column(name = "request_id")
-    private String requestId;
-
-    @Column(name = "transaction_guid")
-    private String transactionGuid;
-
-    @Column(name = "transaction_type")
-    private String transactionType;
-    
-    @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "transaction_time")
-    private Date transactionTime;
-
-    @NotNull
-    @Column(name = "terminal_id")
-    private Long terminalId;
-
-    @NotNull
-    @Column(name = "identifier")
-    private String identifier;
-
-    @NotNull
-    @Column(name = "control_char")
-    private String controlChar;
-
-    @Column(name = "verfication_only")
-    private Boolean verificationOnly;
-
-    @NotNull
-    @Column(name = "routing_number")
-    private Long rountingNumber;
-
-    @NotNull
-    @Column(name = "account_number")
-    private Long accountNumber;
-
-    @Column(name = "check_number")
-    private Long checkNumber;
-
-    @NotNull
-    @Column(name = "account_type")
-    @Size(min = 5, max = 120)
-    private String accountType;
-
-    @Column(name = "company_name")
-    @Size(min = 10, max = 120)
-    private String companyName;
-
-    @NotNull
-    @Column(name = "first_name")
-    @Size(min = 3, max = 120)
-    private String firstName;
-
-    @NotNull
-    @Column(name = "last_name")
-    @Size(min = 1, max = 120)
-    private String lastName;
-
-    @NotNull
-    @Column(name = "address1")
-    @Size(min = 5, max = 1200)
-    private String address1;
-
-    @NotNull
-    @Column(name = "address2")
-    @Size(min = 5, max = 1200)
-    private String address2;
-
-    @NotNull
-    @Column(name = "city")
-    @Size(min = 2, max = 1200)
-    private String city;
-
-    @NotNull
-    @Column(name = "state")
-    @Size(min = 2, max = 2)
-    private String state;
-
-    @NotNull
-    @Column(name = "zip_code")
-    private Integer zipCode;
-
-    @NotNull
-    @Column(name = "phone_number")
-    @Size(min = 10, max = 10, message = "The phone number should 10 digit")
-    private String phoneNumber;
-
-    @NotNull
-    @Column(name = "dl_state")
-    @Size(min = 2, max = 2)
-    private String dlState;
-
-    @NotNull
-    @Column(name = "dl_number")
-    @Size(min = 4, max = 15)
-    private String dlNumber;
+	private static final long serialVersionUID = -3092936274229893893L;
+
+	public static final String SEQ_TRANSACTION_INFORMATION = "SEQ_TRANSACTION_INFORMATION";
+
+	@Id
+	@GeneratedValue(generator = SEQ_TRANSACTION_INFORMATION, strategy = GenerationType.SEQUENCE)
+	private Long id;
+
+	@Column(name = "request_id")
+	private String requestId;
+
+	@Column(name = "transaction_guid")
+	private String transactionGuid;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "transaction_type")
+	private TransactionTypes transactionType;
+
+	@NotNull
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "transaction_time")
+	private Date transactionTime;
+
+	@NotNull
+	@Column(name = "terminal_id")
+	private Long terminalId;
 
-    @NotNull
-    @Column(name = "courtsey_card_id")
-    @Size(min = 10, max = 120)
-    private String courtseyCardId;
+	@NotNull
+	@Column(name = "identifier")
+	private String identifier;
 
-    @Column(name = "dob_year")
-    private Integer dobYear;
+	@NotNull
+	@Column(name = "control_char")
+	private String controlChar;
 
-    @NotNull
-    @Column(name = "check_amount")
-    private Double checkAmount;
+	@Column(name = "verfication_only")
+	private Boolean verificationOnly;
 
-    @Column(name = "micr_data")
-    private String micrData;
+	@NotNull
+	@Column(name = "routing_number")
+	private Long rountingNumber;
+
+	@NotNull
+	@Column(name = "account_number")
+	private Long accountNumber;
+
+	@Column(name = "check_number")
+	private Long checkNumber;
 
-    @Column(name = "check_image_front")
-    private byte[] checkImageFront;
+	@NotNull
+	@Column(name = "account_type")
+	@Size(min = 5, max = 120)
+	private String accountType;
+
+	@Column(name = "company_name")
+	@Size(min = 10, max = 120)
+	private String companyName;
+
+	@NotNull
+	@Column(name = "first_name")
+	@Size(min = 3, max = 120)
+	private String firstName;
 
-    @Column(name = "check_image_back")
-    private byte[] checkImageBack;
+	@NotNull
+	@Column(name = "last_name")
+	@Size(min = 1, max = 120)
+	private String lastName;
 
-    @Column(name = "ecode_Options")
-    private String ecodeOptions;
+	@NotNull
+	@Column(name = "address1")
+	@Size(min = 5, max = 1200)
+	private String address1;
 
-    @Override
-    public Long getId() {
-        return id;
-    }
+	@NotNull
+	@Column(name = "address2")
+	@Size(min = 5, max = 1200)
+	private String address2;
+
+	@NotNull
+	@Column(name = "city")
+	@Size(min = 2, max = 1200)
+	private String city;
 
-    @Override
-    public void setId(Long id) {
-        this.id = id;
-    }
+	@NotNull
+	@Column(name = "state")
+	@Size(min = 2, max = 2)
+	private String state;
 
-    public String getRequestId() {
-        return requestId;
-    }
+	@NotNull
+	@Column(name = "zip_code")
+	private Integer zipCode;
 
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
+	@NotNull
+	@Column(name = "phone_number")
+	@Size(min = 10, max = 10, message = "The phone number should 10 digit")
+	private String phoneNumber;
 
-    public String getTransactionGuid() {
-        return transactionGuid;
-    }
+	@Column(name = "dl_state")
+	@Size(min = 2, max = 2)
+	private String dlState;
 
-    public void setTransactionGuid(String transactionGuid) {
-        this.transactionGuid = transactionGuid;
-    }
+	@Column(name = "dl_number")
+	@Size(min = 4, max = 15)
+	private String dlNumber;
 
-    public String getTransactionType() {
-        return transactionType;
-    }
+	@NotNull
+	@Column(name = "courtsey_card_id")
+	@Size(min = 10, max = 120)
+	private String courtseyCardId;
 
-    public void setTransactionType(String transactionType) {
-        this.transactionType = transactionType;
-    }
+	@Column(name = "dob_year")
+	private Integer dobYear;
 
-    public Long getTerminalId() {
-        return terminalId;
-    }
+	@Column(name = "ssn4")
+	private Integer ssn4;
 
-    public void setTerminalId(Long terminalId) {
-        this.terminalId = terminalId;
-    }
+	@NotNull
+	@Column(name = "check_amount")
+	private Double checkAmount;
 
-    public String getIdentifier() {
-        return identifier;
-    }
+	@Column(name = "micr_data")
+	private String micrData;
 
-    public void setIdentifier(String identifier) {
-        this.identifier = identifier;
-    }
+	@Column(name = "check_image_front")
+	private byte[] checkImageFront;
 
-    public String getControlChar() {
-        return controlChar;
-    }
+	@Column(name = "check_image_back")
+	private byte[] checkImageBack;
 
-    public void setControlChar(String controlChar) {
-        this.controlChar = controlChar;
-    }
+	@Column(name = "ecode_Options")
+	private String ecodeOptions;
 
-    public Boolean isVerificationOnly() {
-        return verificationOnly;
-    }
+	@Override
+	public Long getId() {
+		return id;
+	}
 
-    public void setVerificationOnly(Boolean verificationOnly) {
-        this.verificationOnly = verificationOnly;
-    }
+	@Override
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public Long getRountingNumber() {
-        return rountingNumber;
-    }
+	public String getRequestId() {
+		return requestId;
+	}
 
-    public void setRountingNumber(Long rountingNumber) {
-        this.rountingNumber = rountingNumber;
-    }
+	public void setRequestId(String requestId) {
+		this.requestId = requestId;
+	}
 
-    public Long getAccountNumber() {
-        return accountNumber;
-    }
+	public String getTransactionGuid() {
+		return transactionGuid;
+	}
 
-    public void setAccountNumber(Long accountNumber) {
-        this.accountNumber = accountNumber;
-    }
+	public void setTransactionGuid(String transactionGuid) {
+		this.transactionGuid = transactionGuid;
+	}
 
-    public Long getCheckNumber() {
-        return checkNumber;
-    }
+	public TransactionTypes getTransactionType() {
+		return transactionType;
+	}
 
-    public void setCheckNumber(Long checkNumber) {
-        this.checkNumber = checkNumber;
-    }
+	public void setTransactionType(TransactionTypes transactionType) {
+		this.transactionType = transactionType;
+	}
 
-    public String getAccountType() {
-        return accountType;
-    }
+	public Long getTerminalId() {
+		return terminalId;
+	}
 
-    public void setAccountType(String accountType) {
-        this.accountType = accountType;
-    }
+	public void setTerminalId(Long terminalId) {
+		this.terminalId = terminalId;
+	}
 
-    public String getCompanyName() {
-        return companyName;
-    }
+	public String getIdentifier() {
+		return identifier;
+	}
 
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
+	public void setIdentifier(String identifier) {
+		this.identifier = identifier;
+	}
 
-    public String getFirstName() {
-        return firstName;
-    }
+	public String getControlChar() {
+		return controlChar;
+	}
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
+	public void setControlChar(String controlChar) {
+		this.controlChar = controlChar;
+	}
 
-    public String getLastName() {
-        return lastName;
-    }
+	public Boolean isVerificationOnly() {
+		return verificationOnly;
+	}
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
+	public void setVerificationOnly(Boolean verificationOnly) {
+		this.verificationOnly = verificationOnly;
+	}
 
-    public String getAddress1() {
-        return address1;
-    }
+	public Long getRountingNumber() {
+		return rountingNumber;
+	}
 
-    public void setAddress1(String address1) {
-        this.address1 = address1;
-    }
+	public void setRountingNumber(Long rountingNumber) {
+		this.rountingNumber = rountingNumber;
+	}
 
-    public String getAddress2() {
-        return address2;
-    }
+	public Long getAccountNumber() {
+		return accountNumber;
+	}
 
-    public void setAddress2(String address2) {
-        this.address2 = address2;
-    }
+	public void setAccountNumber(Long accountNumber) {
+		this.accountNumber = accountNumber;
+	}
 
-    public String getCity() {
-        return city;
-    }
+	public Long getCheckNumber() {
+		return checkNumber;
+	}
 
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public String getState() {
-        return state;
-    }
-
-    public void setState(String state) {
-        this.state = state;
-    }
+	public void setCheckNumber(Long checkNumber) {
+		this.checkNumber = checkNumber;
+	}
 
-    public Integer getZipCode() {
-        return zipCode;
-    }
+	public String getAccountType() {
+		return accountType;
+	}
 
-    public void setZipCode(Integer zipCode) {
-        this.zipCode = zipCode;
-    }
+	public void setAccountType(String accountType) {
+		this.accountType = accountType;
+	}
 
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
+	public String getCompanyName() {
+		return companyName;
+	}
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
 
-    public String getDlState() {
-        return dlState;
-    }
+	public String getFirstName() {
+		return firstName;
+	}
 
-    public void setDlState(String dlState) {
-        this.dlState = dlState;
-    }
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
 
-    public String getDlNumber() {
-        return dlNumber;
-    }
+	public String getLastName() {
+		return lastName;
+	}
 
-    public void setDlNumber(String dlNumber) {
-        this.dlNumber = dlNumber;
-    }
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
 
-    public String getCourtseyCardId() {
-        return courtseyCardId;
-    }
+	public String getAddress1() {
+		return address1;
+	}
 
-    public void setCourtseyCardId(String courtseyCardId) {
-        this.courtseyCardId = courtseyCardId;
-    }
+	public void setAddress1(String address1) {
+		this.address1 = address1;
+	}
 
-    public Integer getDobYear() {
-        return dobYear;
-    }
+	public String getAddress2() {
+		return address2;
+	}
 
-    public void setDobYear(Integer dobYear) {
-        this.dobYear = dobYear;
-    }
+	public void setAddress2(String address2) {
+		this.address2 = address2;
+	}
 
-    public Double getCheckAmount() {
-        return checkAmount;
-    }
+	public String getCity() {
+		return city;
+	}
 
-    public void setCheckAmount(Double checkAmount) {
-        this.checkAmount = checkAmount;
-    }
+	public void setCity(String city) {
+		this.city = city;
+	}
 
-    public String getMicrData() {
-        return micrData;
-    }
+	public String getState() {
+		return state;
+	}
 
-    public void setMicrData(String micrData) {
-        this.micrData = micrData;
-    }
+	public void setState(String state) {
+		this.state = state;
+	}
 
-    public byte[] getCheckImageFront() {
-        return checkImageFront;
-    }
+	public Integer getZipCode() {
+		return zipCode;
+	}
 
-    public void setCheckImageFront(byte[] checkImageFront) {
-        this.checkImageFront = checkImageFront;
-    }
+	public void setZipCode(Integer zipCode) {
+		this.zipCode = zipCode;
+	}
 
-    public byte[] getCheckImageBack() {
-        return checkImageBack;
-    }
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
 
-    public void setCheckImageBack(byte[] checkImageBack) {
-        this.checkImageBack = checkImageBack;
-    }
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
 
-    public String getEcodeOptions() {
-        return ecodeOptions;
-    }
+	public String getDlState() {
+		return dlState;
+	}
 
-    public void setEcodeOptions(String ecodeOptions) {
-        this.ecodeOptions = ecodeOptions;
-    }
-    
-    public Date getTransactionTime() {
-        return transactionTime;
-    }
+	public void setDlState(String dlState) {
+		this.dlState = dlState;
+	}
 
-    public void setTransactionTime(Date transactionTime) {
-        this.transactionTime = transactionTime;
-    }
+	public String getDlNumber() {
+		return dlNumber;
+	}
 
+	public void setDlNumber(String dlNumber) {
+		this.dlNumber = dlNumber;
+	}
+
+	public String getCourtseyCardId() {
+		return courtseyCardId;
+	}
+
+	public void setCourtseyCardId(String courtseyCardId) {
+		this.courtseyCardId = courtseyCardId;
+	}
+
+	public Integer getDobYear() {
+		return dobYear;
+	}
+
+	public void setDobYear(Integer dobYear) {
+		this.dobYear = dobYear;
+	}
+
+	public Double getCheckAmount() {
+		return checkAmount;
+	}
+
+	public void setCheckAmount(Double checkAmount) {
+		this.checkAmount = checkAmount;
+	}
+
+	public String getMicrData() {
+		return micrData;
+	}
+
+	public void setMicrData(String micrData) {
+		this.micrData = micrData;
+	}
+
+	public byte[] getCheckImageFront() {
+		return checkImageFront;
+	}
+
+	public void setCheckImageFront(byte[] checkImageFront) {
+		this.checkImageFront = checkImageFront;
+	}
+
+	public byte[] getCheckImageBack() {
+		return checkImageBack;
+	}
+
+	public void setCheckImageBack(byte[] checkImageBack) {
+		this.checkImageBack = checkImageBack;
+	}
+
+	public String getEcodeOptions() {
+		return ecodeOptions;
+	}
+
+	public void setEcodeOptions(String ecodeOptions) {
+		this.ecodeOptions = ecodeOptions;
+	}
+
+	public Date getTransactionTime() {
+		return transactionTime;
+	}
+
+	public void setTransactionTime(Date transactionTime) {
+		this.transactionTime = transactionTime;
+	}
+
+	public Integer getSsn4() {
+		return ssn4;
+	}
+
+	public void setSsn4(Integer ssn4) {
+		this.ssn4 = ssn4;
+	}
 
 }
