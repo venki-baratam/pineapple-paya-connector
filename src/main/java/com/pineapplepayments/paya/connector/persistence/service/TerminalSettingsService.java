@@ -46,7 +46,7 @@ public class TerminalSettingsService {
     private FileUtils fileUtils;
 
     @Transactional
-    public TerminalSettings saveTerminalSettings(Request request, BindingResult bindingResult) {
+    public TerminalSettings addTerminalSettings(Request request, BindingResult bindingResult) {
 
         GetCertificationTerminalSettingsResponse response = null;
 

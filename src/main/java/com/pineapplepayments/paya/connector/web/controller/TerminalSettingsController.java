@@ -20,9 +20,9 @@ import com.pineapplepayments.paya.connector.web.contract.Request;
 import com.pineapplepayments.paya.connector.web.service.validation.TerminalSettingsValidationService;
 
 @RestController
-public class TerminalSettingsRestController {
+public class TerminalSettingsController {
 
-    private static final Logger logger = LoggerFactory.getLogger(TerminalSettingsRestController.class);
+    private static final Logger logger = LoggerFactory.getLogger(TerminalSettingsController.class);
 
     @Autowired
     private TerminalSettingsService terminalSettingsService;
@@ -33,8 +33,8 @@ public class TerminalSettingsRestController {
     @Autowired
     private TerminalSettingsValidationService terminalSettingsValidationService;
 
-    @PostMapping("saveTerminalSettings")
-    public ResponseEntity<?> saveTerminalSettings(@Valid @RequestBody Request request, BindingResult bindingResult) {
+    @PostMapping("addTerminalSettings")
+    public ResponseEntity<?> addTerminalSettings(@Valid @RequestBody Request request, BindingResult bindingResult) {
 
         terminalSettingsValidationService.validate(request, bindingResult, "save");
 
@@ -43,7 +43,7 @@ public class TerminalSettingsRestController {
 
         logger.debug("Called saveTerminalSettings endpoint for terminalId: " + request.getTerminalId());
 
-        TerminalSettings response = terminalSettingsService.saveTerminalSettings(request, bindingResult);
+        TerminalSettings response = terminalSettingsService.addTerminalSettings(request, bindingResult);
 
         if (response.getError() != null && !StringUtils.isEmpty(response.getError().getMessage()))
             return new ResponseEntity<>(response.getError(), HttpStatus.BAD_REQUEST);
