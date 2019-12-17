@@ -1,11 +1,15 @@
 package com.pineapplepayments.paya.connector.persistence.entity;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -29,10 +33,11 @@ public class TransactionInformation extends AbstractAuditable {
 
     @Column(name = "transaction_type")
     private String transactionType;
-
+    
     @NotNull
-    @Column(name = "merchant_id")
-    private String merchantId;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "transaction_time")
+    private Date transactionTime;
 
     @NotNull
     @Column(name = "terminal_id")
@@ -174,14 +179,6 @@ public class TransactionInformation extends AbstractAuditable {
 
     public void setTransactionType(String transactionType) {
         this.transactionType = transactionType;
-    }
-
-    public String getMerchantId() {
-        return merchantId;
-    }
-
-    public void setMerchantId(String merchantId) {
-        this.merchantId = merchantId;
     }
 
     public Long getTerminalId() {
@@ -391,5 +388,14 @@ public class TransactionInformation extends AbstractAuditable {
     public void setEcodeOptions(String ecodeOptions) {
         this.ecodeOptions = ecodeOptions;
     }
+    
+    public Date getTransactionTime() {
+        return transactionTime;
+    }
+
+    public void setTransactionTime(Date transactionTime) {
+        this.transactionTime = transactionTime;
+    }
+
 
 }

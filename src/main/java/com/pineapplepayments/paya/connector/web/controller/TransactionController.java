@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pineapplepayments.paya.connector.contants.ACHContants;
+import com.pineapplepayments.paya.connector.contants.TransactionTypes;
 import com.pineapplepayments.paya.connector.errorhandlers.ErrorHandler;
 import com.pineapplepayments.paya.connector.persistence.entity.TransactionInformation;
 import com.pineapplepayments.paya.connector.persistence.entity.TransactionResponse;
@@ -28,7 +29,7 @@ import com.pineapplepayments.paya.connector.persistence.service.TransactionInfor
 @RequestMapping("/transaction")
 public class TransactionController {
 
-    private static final Logger logger = LoggerFactory.getLogger(TransactionInformationService.class);
+    private static final Logger logger = LoggerFactory.getLogger(TransactionController.class);
 
     @Autowired
     private TransactionInformationService transactionInformationService;
@@ -36,10 +37,18 @@ public class TransactionController {
     @Autowired
     private ErrorHandler errorHandler;
 
+    /**
+     * This method is used for validating the Txapi JSON request and returning proper validation
+     * @param transactionInformation
+     * @param bindingResult
+     * @return
+     * @throws Exception
+     */
     @PostMapping(path = "validate")
     public ResponseEntity<?> validateACHTransaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
 
+        transactionInformation.setTransactionType("validate");
         if (bindingResult.hasErrors()) {
             return errorHandler.getErrorResponseEntityForBindingErrors(bindingResult);
         }
@@ -59,15 +68,20 @@ public class TransactionController {
 
     }
 
+    /**
+     * This method is used for to process the authorization & returning the corresponding response
+     * @param transactionInformation
+     * @param bindingResult
+     * @return
+     */
     @PostMapping("authorization")
     public ResponseEntity<?> processACHTransaction(@Valid @RequestBody TransactionInformation transactionInformation,
             BindingResult bindingResult) {
 
+        transactionInformation.setTransactionType(TransactionTypes.Validate.toString());
         if (bindingResult.hasErrors()) {
             return errorHandler.getErrorResponseEntityForBindingErrors(bindingResult);
         }
-
-        logger.debug(transactionInformation.getMerchantId());
 
         TransactionResponse response = transactionInformationService.processACHTransaction(transactionInformation, bindingResult);
 
@@ -82,9 +96,17 @@ public class TransactionController {
         }
     }
 
+    /**
+     * Created a sample payload & returning it for credit transaction. TODO: The complete implementation will be done in coming sprint
+     * @param transactionInformation
+     * @param bindingResult
+     * @return
+     * @throws Exception
+     */
     @PostMapping(path = "credit")
     public ResponseEntity<?> processCreditsTranaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
+        transactionInformation.setTransactionType(TransactionTypes.Credit.getValue());
         TransactionResponse response = new TransactionResponse();
         response.setTransactionGuid(UUID.randomUUID().toString());
         response.setTransactionType(transactionInformation.getTransactionType());
@@ -105,10 +127,18 @@ public class TransactionController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * Created a sample payload & returning it for void transaction. TODO: The complete implementation will be done in coming sprint
+     * @param transactionInformation
+     * @param bindingResult
+     * @return
+     * @throws Exception
+     */
     @PostMapping(path = "void")
     public ResponseEntity<?> voidACHTransaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
         TransactionResponse response = new TransactionResponse();
+        transactionInformation.setTransactionType(TransactionTypes.Void.getValue());
         response.setTransactionGuid(UUID.randomUUID().toString());
         response.setTransactionType(transactionInformation.getTransactionType());
         response.setRequestId(UUID.randomUUID().toString());
@@ -128,10 +158,18 @@ public class TransactionController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * Created a sample payload & returning it for reverse transaction. TODO: The implementation will be done in coming sprint
+     * @param transactionInformation
+     * @param bindingResult
+     * @return
+     * @throws Exception
+     */
     @PostMapping(path = "reverse")
     public ResponseEntity<?> reverseACHTransaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
         TransactionResponse response = new TransactionResponse();
+        transactionInformation.setTransactionType(TransactionTypes.Reverse.getValue());
         response.setTransactionGuid(UUID.randomUUID().toString());
         response.setTransactionType(transactionInformation.getTransactionType());
         response.setRequestId(UUID.randomUUID().toString());
@@ -151,10 +189,18 @@ public class TransactionController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * Created a sample payload & returning it for recurring transaction. TODO: The complete implementation will be done in coming sprint
+     * @param transactionInformation
+     * @param bindingResult
+     * @return
+     * @throws Exception
+     */
     @PostMapping(path = "recurring")
     public ResponseEntity<?> recurringACHTransaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
         TransactionResponse response = new TransactionResponse();
+        transactionInformation.setTransactionType("recurring");
         response.setTransactionGuid(UUID.randomUUID().toString());
         response.setTransactionType(transactionInformation.getTransactionType());
         response.setRequestId(UUID.randomUUID().toString());
@@ -174,10 +220,18 @@ public class TransactionController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * Created a sample payload & returning it for override transaction. TODO: The complete implementation will be done in coming sprint
+     * @param transactionInformation
+     * @param bindingResult
+     * @return
+     * @throws Exception
+     */
     @PostMapping(path = "override")
     public ResponseEntity<?> overrideACHTransaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
         TransactionResponse response = new TransactionResponse();
+        transactionInformation.setTransactionType("override");
         response.setTransactionGuid(UUID.randomUUID().toString());
         response.setTransactionType(transactionInformation.getTransactionType());
         response.setRequestId(UUID.randomUUID().toString());

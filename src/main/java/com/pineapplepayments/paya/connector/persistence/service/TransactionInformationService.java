@@ -13,6 +13,8 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.lang3.time.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -45,6 +47,8 @@ import com.pineapplepayments.paya.connector.web.service.validation.TransactionRe
 @Transactional(readOnly = true)
 public class TransactionInformationService {
 
+    private static final Logger logger = LoggerFactory.getLogger(TransactionInformationService.class);
+    
     @Autowired
     private TransactionInformationRepository transactionInformationRepository;
 
@@ -69,6 +73,12 @@ public class TransactionInformationService {
     @Autowired
     private TransactionLogRepository transactionLogRepository;
 
+    /**
+     * 
+     * @param transactionInformation
+     * @param bindingResult
+     * @return
+     */
     @Transactional
     public TransactionResponse validateACHTransaction(TransactionInformation transactionInformation,
             BindingResult bindingResult) {
@@ -104,6 +114,12 @@ public class TransactionInformationService {
         }
     }
 
+    /**
+     * Validating the request & preparing the XML to call Paya service i.e processingSingleCertiCheck & returning the response
+     * @param transactionInformation
+     * @param bindingResult
+     * @return
+     */
     @Transactional
     public TransactionResponse processACHTransaction(TransactionInformation transactionInformation,
             BindingResult bindingResult) {
@@ -125,11 +141,20 @@ public class TransactionInformationService {
         }
     }
 
+    /**
+     * Calling the Paya service processSingleCertificationCheck and returning the response 
+     * @param transactionInformation
+     * @param terminalSettings
+     * @param dataPacket
+     * @param watch
+     * @return
+     */
     private TransactionResponse processingSingleCertiCheck(TransactionInformation transactionInformation,
             TerminalSettings terminalSettings, String dataPacket, StopWatch watch) {
         ProcessSingleCertificationCheckResponse singleCertificationCheckResponse;
         singleCertificationCheckResponse = soapClient.processSingleCertificationCheck(dataPacket,
                 authGatewayHeaderService.prepareAuthHeader(terminalSettings.getTerminalId()));
+        logger.debug("Response from paya service for processSingleCertificationCheck(): " + singleCertificationCheckResponse.getProcessSingleCertificationCheckResult());
         watch.stop();
         System.out.println(watch.getTime());
         if (!(singleCertificationCheckResponse.getProcessSingleCertificationCheckResult().contains("EXCEPTION")
@@ -142,6 +167,12 @@ public class TransactionInformationService {
         }
     }
 
+    /**
+     * Preparing the data packet i.e XML body
+     * @param transactionInformation
+     * @param terminalSettings
+     * @return
+     */
     private String prepareDataPacket(TransactionInformation transactionInformation, TerminalSettings terminalSettings) {
         String dataPacket = "";
         AUTH_GATEWAY ag = new AUTH_GATEWAY();
@@ -194,6 +225,13 @@ public class TransactionInformationService {
         return dataPacket;
     }
 
+    /**
+     * Converting the string processSingleCertificationCheckResult to transaction response object
+     * @param singleCertificationCheckResponse
+     * @param transactionInformation
+     * @param terminalSettings
+     * @return
+     */
     private TransactionResponse populateTransactionResponse(
             ProcessSingleCertificationCheckResponse singleCertificationCheckResponse,
             TransactionInformation transactionInformation, TerminalSettings terminalSettings) {
@@ -227,7 +265,14 @@ public class TransactionInformationService {
 
         return transactionResponse;
     }
-
+    
+    /**
+     * Checking the Exception & failure cases from Paya service and returning the transaction response object
+     * @param singleCertificationCheckResponse
+     * @param transactionInformation
+     * @param terminalSettings
+     * @return
+     */
     private TransactionResponse populateProcessSinCertChkTransResForException(
             ProcessSingleCertificationCheckResponse singleCertificationCheckResponse,
             TransactionInformation transactionInformation, TerminalSettings terminalSettings) {
@@ -258,7 +303,14 @@ public class TransactionInformationService {
 
         return transactionResponse;
     }
-
+    
+    /**
+     * 
+     * @param authGatewayCertificationResponse
+     * @param transactionInformation
+     * @param terminalSettings
+     * @return
+     */
     private TransactionResponse populateTransactionResponseForAuthException(
             AuthGatewayCertificationResponse authGatewayCertificationResponse, TransactionInformation transactionInformation,
             TerminalSettings terminalSettings) {
@@ -290,6 +342,13 @@ public class TransactionInformationService {
         return transactionResponse;
     }
 
+     /**
+      * 
+      * @param authGatewayCertificationResponse
+      * @param transactionInformation
+      * @param terminalSettings
+      * @return
+      */
     private TransactionResponse populateTransactionResponseForAuthSuccess(
             AuthGatewayCertificationResponse authGatewayCertificationResponse, TransactionInformation transactionInformation,
             TerminalSettings terminalSettings) {
@@ -314,16 +373,25 @@ public class TransactionInformationService {
 
         return transactionResponse;
     }
-
+    
+    /**
+     * Persisting the data in to TransactionInformation & Transaction Log tables
+     * @param transactionInformation
+     * @return
+     */
     @Transactional
     public TransactionInformation save(TransactionInformation transactionInformation) {
         populateAuditFields(transactionInformation);
-        // saving the request data in to Transaction table
         transactionLogRepository.save(new TransactionLog(transactionInformation));
         return transactionInformationRepository.save(transactionInformation);
 
     }
-
+    
+    /**
+     * 
+     * @param transactionInformationList
+     * @return
+     */
     @Transactional
     public List<TransactionInformation> save(List<TransactionInformation> transactionInformationList) {
         for (TransactionInformation ti : transactionInformationList) {
@@ -332,7 +400,11 @@ public class TransactionInformationService {
         return transactionInformationRepository.saveAll(transactionInformationList);
 
     }
-
+    
+    /**
+     * Populating the audit fields 
+     * @param transactionInformation
+     */
     private void populateAuditFields(TransactionInformation transactionInformation) {
         String userName = System.getProperty("user.name");
         if (transactionInformation.getId() == null) {

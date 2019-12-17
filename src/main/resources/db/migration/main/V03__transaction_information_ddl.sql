@@ -4,7 +4,7 @@ CREATE TABLE transaction_information
 	request_id CHARACTER VARYING(120) NOT NULL ,
 	transaction_guid CHARACTER VARYING(120) NOT NULL,
     transaction_type CHARACTER VARYING(120) NOT NULL,
-    merchant_id CHARACTER VARYING(120) NOT NULL,
+    transaction_time timestamp without time zone NOT NULL,
     terminal_id BIGINT NOT NULL,
     identifier CHARACTER VARYING(1) NOT NULL,
     control_char CHARACTER VARYING(1) NOT NULL,
