@@ -47,8 +47,8 @@ public class TransactionRequestValidationService {
         }
 
         if (terminalSettings != null && terminalSettings.getRunCheckVerification()) {
-            if (transactionInformation.getRountingNumber() == null) {
-                bindingResult.rejectValue("rountingNumber", "400", "Rounting Number is required");
+            if (transactionInformation.getRoutingNumber() == null) {
+                bindingResult.rejectValue("routingNumber", "400", "Routing Number is required");
                 isValid = false;
             }
 

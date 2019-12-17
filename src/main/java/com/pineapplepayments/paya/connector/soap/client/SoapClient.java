@@ -21,7 +21,7 @@ public class SoapClient extends WebServiceGatewaySupport {
     private Boolean isProdEnv;
 
     /*
-     * 
+     *
      */
     public GetCertificationTerminalSettingsResponse getCertificationTerminalSettings(AuthGatewayHeader header) {
         GetCertificationTerminalSettings request = new GetCertificationTerminalSettings();
@@ -38,7 +38,7 @@ public class SoapClient extends WebServiceGatewaySupport {
     }
 
     /*
-     * 
+     *
      */
     public AuthGatewayCertificationResponse authGatewayCertification(String dataPacket, AuthGatewayHeader header) {
 

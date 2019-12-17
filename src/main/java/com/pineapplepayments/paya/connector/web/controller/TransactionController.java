@@ -48,23 +48,21 @@ public class TransactionController {
     public ResponseEntity<?> validateACHTransaction(
             @Valid @RequestBody TransactionInformation transactionInformation, BindingResult bindingResult) throws Exception {
 
-    	transactionInformation.setTransactionType(TransactionTypes.Validate);
-        if (bindingResult.hasErrors()) {
+        transactionInformation.setTransactionType(TransactionTypes.Validate);
+        logger.debug("Request for validate"+ transactionInformation.toString());
+        if (bindingResult.hasErrors())
             return errorHandler.getErrorResponseEntityForBindingErrors(bindingResult);
-        }
 
         TransactionResponse response = transactionInformationService.validateACHTransaction(transactionInformation,
                 bindingResult);
 
-        if (bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors())
             return errorHandler.getErrorResponseEntityForBindingErrors(bindingResult);
-        }
 
-        if (response.getError() != null && !StringUtils.isEmpty(response.getError().getMessage())) {
+        if (response.getError() != null && !StringUtils.isEmpty(response.getError().getMessage()))
             return new ResponseEntity<>(response.getError(), HttpStatus.BAD_REQUEST);
-        } else {
+        else
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }
 
     }
 
@@ -79,25 +77,24 @@ public class TransactionController {
             BindingResult bindingResult) {
 
         transactionInformation.setTransactionType(TransactionTypes.Authorization);
-        if (bindingResult.hasErrors()) {
+        logger.debug("Request for Authorization"+ transactionInformation.toString());
+        if (bindingResult.hasErrors())
             return errorHandler.getErrorResponseEntityForBindingErrors(bindingResult);
-        }
 
         TransactionResponse response = transactionInformationService.processACHTransaction(transactionInformation, bindingResult);
 
-        if (bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors())
             return errorHandler.getErrorResponseEntityForBindingErrors(bindingResult);
-        }
 
-        if (response.getError() != null && !StringUtils.isEmpty(response.getError().getMessage())) {
+        if (response.getError() != null && !StringUtils.isEmpty(response.getError().getMessage()))
             return new ResponseEntity<>(response.getError(), HttpStatus.BAD_REQUEST);
-        } else {
+        else
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }
     }
 
     /**
-     * Created a sample payload & returning it for credit transaction. TODO: The complete implementation will be done in coming sprint
+     * Created a sample payload & returning it for credit transaction. TODO: The complete implementation will be done in coming
+     * sprint
      * @param transactionInformation
      * @param bindingResult
      * @return
@@ -128,7 +125,8 @@ public class TransactionController {
     }
 
     /**
-     * Created a sample payload & returning it for void transaction. TODO: The complete implementation will be done in coming sprint
+     * Created a sample payload & returning it for void transaction. TODO: The complete implementation will be done in coming
+     * sprint
      * @param transactionInformation
      * @param bindingResult
      * @return
@@ -190,7 +188,8 @@ public class TransactionController {
     }
 
     /**
-     * Created a sample payload & returning it for recurring transaction. TODO: The complete implementation will be done in coming sprint
+     * Created a sample payload & returning it for recurring transaction. TODO: The complete implementation will be done in coming
+     * sprint
      * @param transactionInformation
      * @param bindingResult
      * @return
@@ -221,7 +220,8 @@ public class TransactionController {
     }
 
     /**
-     * Created a sample payload & returning it for override transaction. TODO: The complete implementation will be done in coming sprint
+     * Created a sample payload & returning it for override transaction. TODO: The complete implementation will be done in coming
+     * sprint
      * @param transactionInformation
      * @param bindingResult
      * @return

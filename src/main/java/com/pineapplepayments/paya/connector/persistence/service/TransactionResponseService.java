@@ -24,7 +24,7 @@ public class TransactionResponseService {
     private TransactionLogRepository transactionLogRepository;
 
     /*
-     * 
+     *
      */
     @Transactional
     public TransactionResponse save(TransactionResponse transactionResponse) {
@@ -36,7 +36,7 @@ public class TransactionResponseService {
     }
 
     /*
-     * 
+     *
      */
     @Transactional
     public List<TransactionResponse> save(List<TransactionResponse> transactionResponseList) {
@@ -47,7 +47,7 @@ public class TransactionResponseService {
     }
 
     /*
-     * 
+     *
      */
     private void populateAuditFields(TransactionResponse transactionResponse) {
         String userName = System.getProperty("user.name");

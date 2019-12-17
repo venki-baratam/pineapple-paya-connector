@@ -18,7 +18,7 @@ public class TransactionLogService {
     private TransactionLogRepository transactionLogRepository;
 
     /*
-     * 
+     *
      */
     @Transactional
     public TransactionLog save(TransactionLog transactionLog) {
@@ -28,7 +28,7 @@ public class TransactionLogService {
     }
 
     /*
-     * 
+     *
      */
     @Transactional
     public List<TransactionLog> save(List<TransactionLog> transactionLogList) {
@@ -39,7 +39,7 @@ public class TransactionLogService {
     }
 
     /*
-     * 
+     *
      */
     private void populateAuditFields(TransactionLog transactionLog) {
         String userName = System.getProperty("user.name");

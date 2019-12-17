@@ -23,186 +23,195 @@ import com.pineapplepayments.paya.connector.soap.contract.RESPONSE;
 @Entity(name = "transaction_response")
 public class TransactionResponse extends AbstractAuditable {
 
-	private static final long serialVersionUID = -7139069204430880832L;
+    private static final long serialVersionUID = -7139069204430880832L;
 
-	public static final String SEQ_TRANSACTION_RESPONSE = "SEQ_TRANSACTION_RESPONSE";
+    public static final String SEQ_TRANSACTION_RESPONSE = "SEQ_TRANSACTION_RESPONSE";
 
-	@Id
-	@GeneratedValue(generator = SEQ_TRANSACTION_RESPONSE, strategy = GenerationType.SEQUENCE)
-	private Long id;
+    @Id
+    @GeneratedValue(generator = SEQ_TRANSACTION_RESPONSE, strategy = GenerationType.SEQUENCE)
+    private Long id;
 
-	@JsonIgnore
-	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "trasaction_info_id", nullable = false)
-	private TransactionInformation transactionInfoId;
+    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "trasaction_info_id", nullable = false)
+    private TransactionInformation transactionInfoId;
 
-	@NotNull
-	@Column(name = "transaction_guid")
-	private String transactionGuid;
+    @NotNull
+    @Column(name = "transaction_guid")
+    private String transactionGuid;
 
-	@Enumerated(EnumType.STRING)
-	@NotNull
-	@Column(name = "transaction_type")
-	private TransactionTypes transactionType;
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    @Column(name = "transaction_type")
+    private TransactionTypes transactionType;
 
-	@NotNull
-	@Column(name = "request_id")
-	private String requestId;
+    @NotNull
+    @Column(name = "request_id")
+    private String requestId;
 
-	@NotNull
-	@Column(name = "sec_code")
-	private String secCode;
+    @NotNull
+    @Column(name = "sec_code")
+    private String secCode;
 
-	@Column(name = "response_Type")
-	private String responseType;
+    @Column(name = "response_Type")
+    private String responseType;
 
-	@Column(name = "response_type_text")
-	private String responseTypeText;
+    @Column(name = "response_type_text")
+    private String responseTypeText;
 
-	@Column(name = "result_code")
-	private Integer resultCode;
+    @Column(name = "result_code")
+    private Integer resultCode;
 
-	@Column(name = "type_code")
-	private Integer typeCode;
+    @Column(name = "type_code")
+    private Integer typeCode;
 
-	@Column(name = "code")
-	private String code;
+    @Column(name = "code")
+    private String code;
 
-	@Column(name = "message")
-	private String message;
+    @Column(name = "message")
+    private String message;
 
-	@Column(name = "tx_status")
-	private Boolean status = false;
+    @Column(name = "tx_status")
+    private Boolean status = false;
 
-	@Transient
-	private Error error;
+    @Transient
+    private Error error;
 
-	public TransactionResponse(RESPONSE processSingleResponse) {
-		transactionGuid = processSingleResponse.getAUTHORIZATION_MESSAGE().getTRANSACTION_ID();
-		requestId = processSingleResponse.getREQUEST_ID();
-		responseType = processSingleResponse.getAUTHORIZATION_MESSAGE().getRESPONSE_TYPE();
-		responseTypeText = processSingleResponse.getAUTHORIZATION_MESSAGE().getRESPONSE_TYPE_TEXT();
-		resultCode = Integer.parseInt(processSingleResponse.getAUTHORIZATION_MESSAGE().getRESULT_CODE());
-		typeCode = Integer.parseInt(processSingleResponse.getAUTHORIZATION_MESSAGE().getTYPE_CODE());
-		code = processSingleResponse.getAUTHORIZATION_MESSAGE().getCODE();
-		message = processSingleResponse.getAUTHORIZATION_MESSAGE().getMESSAGE();
+    public TransactionResponse(RESPONSE processSingleResponse) {
+        transactionGuid = processSingleResponse.getAUTHORIZATION_MESSAGE().getTRANSACTION_ID();
+        requestId = processSingleResponse.getREQUEST_ID();
+        responseType = processSingleResponse.getAUTHORIZATION_MESSAGE().getRESPONSE_TYPE();
+        responseTypeText = processSingleResponse.getAUTHORIZATION_MESSAGE().getRESPONSE_TYPE_TEXT();
+        resultCode = Integer.parseInt(processSingleResponse.getAUTHORIZATION_MESSAGE().getRESULT_CODE());
+        typeCode = Integer.parseInt(processSingleResponse.getAUTHORIZATION_MESSAGE().getTYPE_CODE());
+        code = processSingleResponse.getAUTHORIZATION_MESSAGE().getCODE();
+        message = processSingleResponse.getAUTHORIZATION_MESSAGE().getMESSAGE();
 
-	}
+    }
 
-	public TransactionResponse() {
-	}
+    public TransactionResponse() {
+    }
 
-	@Override
-	public Long getId() {
-		return id;
-	}
+    @Override
+    public Long getId() {
+        return id;
+    }
 
-	@Override
-	protected void setId(Long id) {
+    @Override
+    protected void setId(Long id) {
 
-	}
+    }
 
-	public TransactionInformation getTransactionInfoId() {
-		return transactionInfoId;
-	}
+    public TransactionInformation getTransactionInfoId() {
+        return transactionInfoId;
+    }
 
-	public void setTransactionInfoId(TransactionInformation transactionInfoId) {
-		this.transactionInfoId = transactionInfoId;
-	}
+    public void setTransactionInfoId(TransactionInformation transactionInfoId) {
+        this.transactionInfoId = transactionInfoId;
+    }
 
-	public String getRequestId() {
-		return requestId;
-	}
+    public String getRequestId() {
+        return requestId;
+    }
 
-	public void setRequestId(String requestId) {
-		this.requestId = requestId;
-	}
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
 
-	public String getSecCode() {
-		return secCode;
-	}
+    public String getSecCode() {
+        return secCode;
+    }
 
-	public void setSecCode(String secCode) {
-		this.secCode = secCode;
-	}
+    public void setSecCode(String secCode) {
+        this.secCode = secCode;
+    }
 
-	public String getResponseType() {
-		return responseType;
-	}
+    public String getResponseType() {
+        return responseType;
+    }
 
-	public void setResponseType(String responseType) {
-		this.responseType = responseType;
-	}
+    public void setResponseType(String responseType) {
+        this.responseType = responseType;
+    }
 
-	public String getResponseTypeText() {
-		return responseTypeText;
-	}
+    public String getResponseTypeText() {
+        return responseTypeText;
+    }
 
-	public void setResponseTypeText(String responseTypeText) {
-		this.responseTypeText = responseTypeText;
-	}
+    public void setResponseTypeText(String responseTypeText) {
+        this.responseTypeText = responseTypeText;
+    }
 
-	public Integer getResultCode() {
-		return resultCode;
-	}
+    public Integer getResultCode() {
+        return resultCode;
+    }
 
-	public void setResultCode(Integer resultCode) {
-		this.resultCode = resultCode;
-	}
+    public void setResultCode(Integer resultCode) {
+        this.resultCode = resultCode;
+    }
 
-	public Integer getTypeCode() {
-		return typeCode;
-	}
+    public Integer getTypeCode() {
+        return typeCode;
+    }
 
-	public void setTypeCode(Integer typeCode) {
-		this.typeCode = typeCode;
-	}
+    public void setTypeCode(Integer typeCode) {
+        this.typeCode = typeCode;
+    }
 
-	public String getCode() {
-		return code;
-	}
+    public String getCode() {
+        return code;
+    }
 
-	public void setCode(String code) {
-		this.code = code;
-	}
+    public void setCode(String code) {
+        this.code = code;
+    }
 
-	public String getMessage() {
-		return message;
-	}
+    public String getMessage() {
+        return message;
+    }
 
-	public TransactionTypes getTransactionType() {
-		return transactionType;
-	}
+    public TransactionTypes getTransactionType() {
+        return transactionType;
+    }
 
-	public void setTransactionType(TransactionTypes transactionType) {
-		this.transactionType = transactionType;
-	}
+    public void setTransactionType(TransactionTypes transactionType) {
+        this.transactionType = transactionType;
+    }
 
-	public void setMessage(String message) {
-		this.message = message;
-	}
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-	public String getTransactionGuid() {
-		return transactionGuid;
-	}
+    public String getTransactionGuid() {
+        return transactionGuid;
+    }
 
-	public void setTransactionGuid(String transactionGuid) {
-		this.transactionGuid = transactionGuid;
-	}
+    public void setTransactionGuid(String transactionGuid) {
+        this.transactionGuid = transactionGuid;
+    }
 
-	public Boolean getStatus() {
-		return status;
-	}
+    public Boolean getStatus() {
+        return status;
+    }
 
-	public void setStatus(Boolean status) {
-		this.status = status;
-	}
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
 
-	public Error getError() {
-		return error;
-	}
+    public Error getError() {
+        return error;
+    }
 
-	public void setError(Error error) {
-		this.error = error;
-	}
+    public void setError(Error error) {
+        this.error = error;
+    }
+
+    @Override
+    public String toString() {
+        return "TransactionResponse [id=" + id + ", transactionGuid="
+                + transactionGuid + ", transactionType=" + transactionType + ", requestId=" + requestId + ", secCode=" + secCode
+                + ", responseType=" + responseType + ", responseTypeText=" + responseTypeText + ", resultCode=" + resultCode
+                + ", typeCode=" + typeCode + ", code=" + code + ", message=" + message + ", status=" + status + ", error=" + error
+                + "]";
+    }
 }

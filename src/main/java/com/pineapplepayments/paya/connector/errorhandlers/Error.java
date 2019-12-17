@@ -18,7 +18,7 @@ public class Error {
 
     private HttpStatus status;
 
-    private List<FieldError> fieldErrors = new ArrayList<FieldError>();
+    private List<FieldError> fieldErrors = new ArrayList<>();
 
     public Error(HttpStatus status) {
         this();

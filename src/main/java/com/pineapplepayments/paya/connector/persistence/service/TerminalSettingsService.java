@@ -128,11 +128,10 @@ public class TerminalSettingsService {
                 settings = (TERMINAL_SETTINGS) jaxbUnmarshaller
                         .unmarshal(new StringReader(response.getGetCertificationTerminalSettingsResult()));
                 terminalSettings = getByTerminalId(settings.getTERMINAL_ID());
-                if (terminalSettings != null && terminalSettings.getTerminalId() != null) {
+                if (terminalSettings != null && terminalSettings.getTerminalId() != null)
                     prepareTerminalSettingsForUpdate(terminalSettings, settings);
-                } else {
+                else
                     terminalSettings = new TerminalSettings(settings);
-                }
                 terminalSettings.setSchemaFileData(fileUtils.readByURL(settings.getSCHEMA_FILE_PATH()));
                 terminalSettings.setXmlTemplateData(fileUtils.readByURL(settings.getXML_TEMPLATE_PATH()));
             }
