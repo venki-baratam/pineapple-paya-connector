@@ -28,6 +28,48 @@ public class TransactionRequestValidationService {
             isValid = false;
         }
 
+        if (terminalSettings != null && terminalSettings.getDlRequired()) {
+            if (StringUtils.isEmpty(transactionInformation.getDlState())) {
+                bindingResult.rejectValue("dlState", "400", "Dl State is required");
+                isValid = false;
+            }
+            if (StringUtils.isEmpty(transactionInformation.getDlNumber())) {
+                bindingResult.rejectValue("dlState", "400", "Dl Number is required");
+                isValid = false;
+            }
+        }
+
+        if (terminalSettings != null && !terminalSettings.getAllowConsumerCredits()) {
+            if (transactionInformation.getCheckAmount().compareTo(0.0) < 0) {
+                bindingResult.rejectValue("checkAmount", "400", "Check amount can not be negative");
+                isValid = false;
+            }
+        }
+
+        if (terminalSettings != null && terminalSettings.getRunCheckVerification()) {
+            if (transactionInformation.getRountingNumber() == null) {
+                bindingResult.rejectValue("rountingNumber", "400", "Rounting Number is required");
+                isValid = false;
+            }
+
+            if (transactionInformation.getAccountNumber() == null) {
+                bindingResult.rejectValue("accountNumber", "400", "Account Number is required");
+                isValid = false;
+            }
+            if (transactionInformation.getCheckAmount() == null) {
+                bindingResult.rejectValue("checkAmount", "400", "Check amount is required");
+                isValid = false;
+            }
+        }
+
+        if (terminalSettings != null && terminalSettings.getRunIdentityVerification()) {
+            if (transactionInformation.getDobYear() == null && transactionInformation.getSsn4() == null) {
+                bindingResult.rejectValue("dobYear", "400", "DOB Year/SSN4 is required");
+                isValid = false;
+            }
+
+        }
+
         return isValid;
     }
 
